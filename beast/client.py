@@ -26,7 +26,7 @@ def take_file(path,size):
         acc += len(data)
         while data:
             file.write(data)
-            if acc == size:
+            if acc <= size:
                 break
             data = client.recv(1024)
             acc += len(data)
@@ -39,7 +39,7 @@ def give_file(path):
         file = open(path,"rb")
         size = str(os.stat(path).st_size)
         client.sendall(size.encode())
-        client.recv(1024)
+        _ = client.recv(1024)
         data = file.read(1024)
         while data:
             client.sendall(data)

@@ -3,7 +3,7 @@ import threading
 import os
 
 clients = []
-HOST = "127.0.0.1"
+HOST = "0.0.0.0"
 PORT = 4444
 
 def listener():
@@ -65,7 +65,7 @@ def give_file(client):
         while data:
             print(f"{acc}/{size}",end="\r")
             file.write(data)
-            if acc == size:
+            if acc <= size:
                 print()
                 break
             data = client.recv(1024)

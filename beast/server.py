@@ -37,6 +37,7 @@ def update():
         print(e)
 
 def ls():
+    update()
     try:
         for i,client in enumerate(clients):
             print(str(i)+"."+client["name"])
